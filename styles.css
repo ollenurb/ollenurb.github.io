@@ -1,0 +1,60 @@
+* {
+  font-family: 'Roboto', sans-serif;
+}
+
+body {
+  height: 100%; 
+  background-color: #2E3440;
+  color: #D8DEE9;
+}
+
+div a {
+  font-size: 16pt;
+  color: #D8DEE9;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 6px;
+  display: inline-block;
+}
+
+a {
+  color:#81A1C1;
+}
+
+a:hover {
+  color:#81A1C1;
+  text-decoration: none;
+}
+
+.penrose {
+  transform: rotate(180deg);
+  fill: #81A1C1;
+}
+
+.penrose:hover {
+  fill: #BF616A;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 58pt;
+  font-weight: 100;
+}
+
+i {
+  margin-right: 6px;
+}
+
+.subheader {
+  font-family: 'Roboto Mono', monospace; 
+  font-size: 22pt; 
+  text-align: center; 
+}
+
+footer {
+  position: absolute; 
+  bottom: 12px; 
+  width: 100%;
+  text-align: center;
+}
