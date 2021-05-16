@@ -1,102 +1,83 @@
 <html>
+<!-- Avatar: https://avatars.githubusercontent.com/u/20027628?v=4 --!>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frow@3/dist/frow.min.css">
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300&display=swap" rel="stylesheet"> 
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono:ital,wght@1,200&display=swap" rel="stylesheet"> 
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/fontawesome.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/solid.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/brands.min.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono:ital,wght@1,200&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
     <title>
       ollenurB oettaM
     </title>
-    
   </head>
 
   <body>
-    
-    <div class="frow-container p-40">
-      <div class="frow column-center">
-
-        <div class="col-sm-1-2">
-          <h1>Matteo Brunello</h1>
+    <!-- Navigation bar menu --!>
+    <div class="navbar">
+        <span class="logo">
+            Ollenurb.
+        </span>
+        <div class="menu">
+            <ul>
+                <li>Home</li>
+                <li>About</li>
+                <li>Blog</li>
+            </ul>
         </div>
+    </div>
 
-        <div class="col-sm-1-3">
-          <!-- <img src="penrose.svg" class="penrose"/> -->
-          <svg class="penrose" version="1.0" xmlns="http://www.w3.org/2000/svg"
-            width="100%" height="100%" viewBox="0 0 858.000000 750.000000" preserveAspectRatio="xMidYMid meet">
-            <g transform="translate(0.000000,750.000000) scale(0.100000,-0.100000)" stroke="none">
-              <path d="M3620 7492 c0 -4 4 -12 9 -17 5 -6 -737 -1273 -1810 -3090 -1000
-              -1694 -1819 -3089 -1819 -3101 0 -11 135 -292 300 -625 165 -332 299 -608 297
-              -613 -5 -15 33 -48 49 -42 8 3 14 10 14 16 0 7 1149 10 3650 10 l3650 0 301
-              608 c165 334 304 609 309 610 16 6 11 51 -7 70 -10 10 -835 1404 -1833 3099
-              l-1815 3082 -647 1 c-357 0 -648 -4 -648 -8z m1571 -590 c267 -454 2378 -4035
-              3072 -5212 118 -201 213 -367 211 -369 -3 -3 -5951 -19 -5960 -16 -1 0 147
-              269 329 597 l330 598 1734 2 1733 3 -1455 2463 c-800 1355 -1455 2465 -1455
-              2468 0 2 258 4 573 4 l572 0 316 -538z m-111 -1897 c772 -1303 1414 -2387
-              1427 -2408 l23 -37 -571 2 -571 3 -579 950 c-318 523 -704 1156 -856 1407
-              -153 251 -282 457 -288 457 -5 0 -94 -147 -196 -327 -465 -819 -2823 -4922
-              -2829 -4922 -4 0 -135 260 -292 577 l-285 578 27 45 c24 39 2706 4584 3344
-              5667 127 215 234 389 237 385 3 -4 638 -1073 1409 -2377z m-1156 -162 l245
-              -401 -261 -474 c-143 -260 -537 -974 -875 -1587 -338 -613 -617 -1121 -620
-              -1128 -4 -11 528 -13 3031 -13 1670 0 3036 -3 3036 -7 0 -5 -126 -262 -280
-              -573 l-279 -565 -3612 -3 -3611 -2 25 42 c26 46 2206 3844 2666 4645 152 265
-              279 479 283 475 3 -4 117 -188 252 -409z m840 -1376 c300 -493 546 -900 546
-              -902 0 -3 -472 -5 -1050 -5 -577 0 -1050 2 -1050 4 0 3 217 398 481 878 265
-              480 489 888 497 906 9 18 19 29 22 25 4 -5 253 -412 554 -906z"/>
-          </g>
-        </svg>
+    <!-- Main content --!>
+    <div class="wrapper">
+        <!-- Header --!>
+        <header class="header">Recent Posts</header>
 
+        <!-- Here starts the actual content --!>
+        <!-- This content will change based on different pages --!>
+        <div class="content">
+            <div class="content-separator">2021</div>
+            <div class="content-item">
+                <span class="content-item-title">
+                    Very few reasons why Haskell is a great language
+                </span>
+            </div>
 
+            <div class="content-item">
+                <span class="content-item-title">
+                    How to program clusters to perform massively
+                    parallel computations using the Message Passing
+                    Interface and C/C++
+                </span>
+            </div>
+
+            <div class="content-separator">2022</div>
+            <div class="content-item">
+                <span class="content-item-title">
+                    Just another introduction to CUDA programming
+                </span>
+            </div>
+
+            <div class="content-item">
+                <span class="content-item-title">
+                    Lattice-Boltzmann fluid simulation using C++ and CUDA
+                </span>
+            </div>
         </div>
-
-        <div class="col-sm-1-2">
-          <p class="subheader">
-          let interests = [ </br>
-          Functional Languages, </br>
-          Category Theory, </br>
-          Type Theory] </br>
-          in life
-          </p>
-        </div>
-        
-        <div class="col-sm-1-2 text-center">
-          <hr style="color: #D8DEE9">
-           <a href="https://github.com/Ollenurb">
-             <i class="fab fa-github"></i>GitHub
-           </a>
-          <a href="https://www.instagram.com/matte.brune/">
-            <i class="fab fa-instagram"></i>Instagram
-          </a>
-          <a href="blog.html">
-            <i class="fas fa-book"></i>Blog
-          </a>
-          <a href="https://stackoverflow.com/users/10732061/arrapay">
-           <i class="fab fa-stack-overflow"></i>Stack Overflow
-          </a>
-
-        </div>
-
-      </div>
     </div>
 
   </body>
 
-  <footer>
-    This site has been built using the 
-    <a href="https://www.nordtheme.com/">Nord</a> colorscheme, 
-    <a href="https://frowcss.com/">Frow</a> and 
-    <a href="https://fontawesome.com/">FontAwesome</a>.</br>
-    The logo is a <a href="https://en.wikipedia.org/wiki/Penrose_triangle">Penrose Triangle</a>. 
-  </footer>
-
-
+  <!-- <footer> -->
+  <!--   This site has been built using the -->
+  <!--   <a href="https://www.nordtheme.com/">Nord</a> colorscheme, -->
+  <!--   <a href="https://frowcss.com/">Frow</a> and -->
+  <!--   <a href="https://fontawesome.com/">FontAwesome</a>.</br> -->
+  <!--   The logo is a <a href="https://en.wikipedia.org/wiki/Penrose_triangle">Penrose Triangle</a>. -->
+  <!-- </footer> -->
 </html>
