@@ -62,7 +62,16 @@
 .menu li {
   display: inline;
   margin-left: 12px;
+}
+
+.menu a {
+  text-decoration: none;
+  padding: 0px;
   color: var(--gray);
+}
+
+.menu a:hover {
+  color: var(--almost-white);
 }
 
 .menu ul {
