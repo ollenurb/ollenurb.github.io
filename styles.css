@@ -119,27 +119,24 @@ body {
   background-color: var(--ultra-dark);
 }
 
-div a {
-  font-size: 16pt;
-  color: #D8DEE9;
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 6px;
-  display: inline-block;
-}
-
-a {
-  color:#81A1C1;
-}
-
-a:hover {
-  color:#81A1C1;
-  text-decoration: none;
-}
-
 footer {
   position: absolute;
   bottom: 12px;
   width: 100%;
   text-align: center;
+}
+
+.avatar {
+    border-radius: 50%;
+}
+
+.index-content {
+    margin: auto;
+    padding-left: 100px;
+    padding-right: 100px;
+    text-align: center;
+}
+
+p {
+    font-size: 16pt;
 }
