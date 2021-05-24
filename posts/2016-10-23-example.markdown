@@ -1,5 +1,5 @@
 ---
-title: Data parallel computations using Game of Life as an example and this is a very long title
+title: Another very long title used to test the blog list of articles wow so nice
 ---
 
 Mauris in lorem nisl. Maecenas tempus facilisis ante, eget viverra nisl
