@@ -41,8 +41,8 @@ body {
 }
 
 .header {
-  margin-top: 4em;
-  margin-bottom: 4em;
+  margin-top: 2.5em;
+  margin-bottom: 2.5em;
   text-align: center;
   font-weight: bold;
   font-size: 24pt;
@@ -55,9 +55,9 @@ body {
   flex: 0;
   margin-right: auto;
   margin-left: auto;
-  /* margin-top: 18px; */
-  padding-top: 12px;
-  padding-bottom: 12px;
+  margin-top: 12px;
+  /* padding-top: 12px; */
+  /* padding-bottom: 12px; */
   border-bottom: 1px solid var(--dark);
   border-bottom-color: var(--dark);
 }
@@ -73,7 +73,7 @@ ul.menu li {
   float: right;
   display: block;
   text-align: center;
-  padding: 14px 16px;
+  padding: 10px 10px;
 }
 
 ul.menu li a {
@@ -83,22 +83,11 @@ ul.menu li a {
 
 ul.menu li.logo {
   float: left;
+  font-size: 18pt;
 }
 
 ul.menu a:hover {
   color: var(--almost-white);
-}
-
-
-.logo {
-  /* font-size: 18pt; */
-  /* margin: auto; */
-  /* float: left; */
-  /* margin: 0; */
-  /* position: relative; */
-  /* top: 50%; */
-  /* -ms-transform: translateY(-50%); */
-  /* transform: translateY(-50%); */
 }
 
 .content-item {
@@ -126,6 +115,7 @@ ul.menu a:hover {
 
 
 .footer {
+  width: 100%;
   max-width: calc(990px - (30px * 2));
   border-top: 1px solid var(--light-gray);
   border-top-color: var(--dark);
@@ -133,6 +123,13 @@ ul.menu a:hover {
   margin-left: auto;
   margin-right: auto;
   text-align: center;
+  padding: 14px;
+  font-size: 14pt;
+  color: var(--light-gray);
+}
+
+.footer a {
+    text-decoration: none;
 }
 
 .avatar {
