@@ -1,5 +1,6 @@
 ---
 title: Data parallel computations using Game of Life as an example and this is a very long title
+mathjax: on
 ---
 
 Mauris in lorem nisl. Maecenas tempus facilisis ante, eget viverra nisl
@@ -7,6 +8,12 @@ tincidunt et. Donec turpis lectus, mattis ac malesuada a, accumsan eu libero.
 Morbi condimentum, tortor et tincidunt ullamcorper, sem quam pretium nulla, id
 convallis lectus libero nec turpis. Proin dapibus nisi id est sodales nec
 ultrices tortor pellentesque.
+
+Here is an equation $e = mc^2$, here another one
+
+$$
+Ax = \lambda x
+$$
 
 Vivamus vel nisi ac lacus sollicitudin vulputate
 ac ut ligula. Nullam feugiat risus eget eros gravida in molestie sapien euismod.
