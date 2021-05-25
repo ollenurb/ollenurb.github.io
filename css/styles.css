@@ -122,13 +122,15 @@ ul.menu a:hover {
   flex-shrink: 0;
   margin-left: auto;
   margin-right: auto;
+}
+
+.footer p {
   text-align: center;
-  padding: 14px;
-  font-size: 14pt;
+  font-size: 11pt;
   color: var(--light-gray);
 }
 
-.footer a {
+.footer p a {
     text-decoration: none;
 }
 
