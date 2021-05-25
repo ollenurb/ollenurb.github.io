@@ -1,7 +1,9 @@
+<table class="posts-list">
 $for(posts)$
-    <div class="content-item">
-        <span class="content-item-title">
-            <a href="$url$">$title$</a> - $date$
-        </span>
-    </div>
+  <tr>
+    <td>$date$</td>
+    <td><a href="$url$">$title$</a></td>
+  </tr>
 $endfor$
+</table>
+
