@@ -9,8 +9,6 @@
 
 * {
     box-sizing: border-box;
-    font-family: 'Noto Serif', serif;
-    font-family: serif;
 }
 
 p {
@@ -23,6 +21,7 @@ li {
 }
 
 body, html {
+    font-family: 'Noto Serif', serif;
     font-size: 120%;
     color: var(--foreground);
     background: var(--background);
