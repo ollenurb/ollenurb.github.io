@@ -22,12 +22,6 @@ main = hakyllWith config $ do
         route   idRoute
         compile compressCssCompiler
 
-    match "contact.md" $ do
-        route   $ setExtension "html"
-        compile $ pandocCompiler
-            >>= loadAndApplyTemplate "templates/default.html" defaultContext
-            >>= relativizeUrls
-
     match "posts/*" $ do
         route $ setExtension "html"
         let writerOptions = defaultHakyllWriterOptions { writerHTMLMathMethod = MathJax "" }
@@ -42,7 +36,6 @@ main = hakyllWith config $ do
             posts <- recentFirst =<< loadAll "posts/*"
             let blogCtx =
                     listField "posts" postCtx (return posts) <>
-                    constField "title" "Blog"                <>
                     defaultContext
 
             makeItem ""
@@ -50,12 +43,10 @@ main = hakyllWith config $ do
                 >>= loadAndApplyTemplate "templates/default.html" blogCtx
                 >>= relativizeUrls
 
-    match "index.html" $ do
-        route idRoute
+    match "static/index.html" $ do
+        route $ (gsubRoute "static/" (const ""))
         compile $ do
-            let indexCtx =
-                    constField "title" "Hello, World" <>
-                    defaultContext
+            let indexCtx = defaultContext
 
             getResourceBody
                 >>= applyAsTemplate indexCtx
@@ -68,5 +59,5 @@ main = hakyllWith config $ do
 --------------------------------------------------------------------------------
 postCtx :: Context String
 postCtx =
-    dateField "date" "%B %e, %Y" `mappend`
+    dateField "date" "%Y-%m-%d" `mappend`
     defaultContext

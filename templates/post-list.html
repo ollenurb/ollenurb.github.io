@@ -1,9 +1,7 @@
-<table class="posts-list">
+<ul class="posts padded-list">
 $for(posts)$
-  <tr>
-    <td>$date$</td>
-    <td><a href="$url$">$title$</a></td>
-  </tr>
+  <li>
+    <a href="$url$">$title$</a> - <span class="date">$date$</span>
+  </li>
 $endfor$
-</table>
-
+</ul>
