@@ -1,0 +1,209 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif:wght@300;700&display=swap");
+/* :root {
+    --foreground: #e9ecefff;
+    --foreground-light: #6c757dff;
+    --background: #212529ff;
+    --slightly-red: #a52a2a;
+} */
+:root {
+    --foreground: #000;
+    --foreground-light: #6c757dff;
+    --background: #fffff8;
+    --slightly-red: #a52a2a;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body,
+html {
+    font-family: "Noto Serif", serif;
+    color: var(--foreground);
+    background: var(--background);
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+::selection {
+    background: var(--foreground-light);
+    color: var(--background);
+}
+
+.body-container {
+    max-width: 800px;
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-flow: column;
+}
+
+.main-content {
+    flex: 1;
+}
+
+p a {
+    color: var(--slightly-red);
+    text-decoration: none;
+}
+
+a {
+    color: var(--foreground);
+}
+header ul {
+    display: flex;
+    list-style: none;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0;
+    margin: 0 auto;
+}
+header ul li a {
+    text-decoration: none;
+    color: var(--foreground-light);
+    transition: 0.5s;
+}
+header ul li a:hover {
+    color: var(--foreground);
+}
+header ul li {
+    display: inline-block;
+    vertical-align: center;
+    padding: 18px 14px;
+}
+header ul li:last-child {
+    padding-right: 0px;
+}
+header ul li:first-child {
+    padding-left: 0px;
+}
+header {
+    padding: 0px;
+}
+
+.logo {
+    font-weight: bold;
+    font-size: 2rem;
+    flex: 1;
+}
+
+.logo span {
+    color: var(--slightly-red);
+}
+
+.highlight {
+    padding: 0.6em;
+    overflow: auto;
+    /* Hide scrollbar for WebKit browsers */
+    -webkit-scrollbar: none;
+    /* Hide scrollbar for Firefox */
+    scrollbar-width: none;
+    /* Hide scrollbar for IE and Edge Legacy */
+    -ms-overflow-style: none;
+    --s: 10px;
+    padding: var(--s);
+    border: var(--s) solid #0000;
+    box-sizing: border-box;
+    background: var(--foreground-light);
+    --mask:
+        radial-gradient(17.61px at 50% 24.5px, #000 99%, #0000 101%)
+            calc(50% - 20px) 0/40px 51% repeat-x,
+        radial-gradient(17.61px at 50% -14.5px, #0000 99%, #000 101%) 50%
+            10px/40px calc(51% - 10px) repeat-x,
+        radial-gradient(
+                17.61px at 50% calc(100% - 24.5px),
+                #000 99%,
+                #0000 101%
+            )
+            calc(50% - 20px) 100%/40px 51% repeat-x,
+        radial-gradient(
+                17.61px at 50% calc(100% + 14.5px),
+                #0000 99%,
+                #000 101%
+            )
+            50% calc(100% - 10px) / 40px calc(51% - 10px) repeat-x;
+    -webkit-mask: var(--mask);
+    mask: var(--mask);
+}
+
+footer {
+    display: block;
+    text-align: center;
+    border-top: 12px solid;
+    border-image: url('data:image/svg+xml;utf8,<svg width="60" height="12" xmlns="http://www.w3.org/2000/svg"><path d="M0 6 Q 7.5 0, 15 6 T 30 6 T 45 6 T 60 6" fill="transparent" stroke="%23000000" stroke-width="1"/></svg>')
+        15 repeat;
+    color: var(--foreground-light);
+    bottom: 0;
+    margin-top: 32px;
+    width: 100%;
+}
+footer p {
+    margin: 16px;
+    font-size: 0.8rem;
+}
+
+p {
+    line-height: 1.5rem;
+}
+
+.first-paragraph::first-letter {
+    color: var(--slightly-red);
+    float: left;
+    font-size: 3.7rem;
+    margin: 0 0.1em 0 0;
+    line-height: 3rem;
+}
+.shell-prompt {
+    color: var(--slightly-red);
+}
+.posts {
+    list-style: none;
+    padding: 0;
+    font-size: 1rem;
+}
+.padded-list li {
+    margin-bottom: 12px;
+}
+.date {
+    font-style: italic;
+    color: var(--foreground-light);
+}
+.post-title {
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+}
+@media (max-width: 900px) {
+    .body-container {
+        padding: 0 16px;
+    }
+    .presentation {
+        padding-right: 0;
+        padding-top: 3rem;
+        order: 1;
+    }
+}
+
+@media (max-width: 470px) {
+    html,
+    body {
+        font-size: 100%;
+    }
+    header ul {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    header ul li {
+        flex: 25%;
+        padding: 8px 0px;
+    }
+    header ul li:last-child {
+        padding-right: 0px;
+    }
+    header ul li:first-child {
+        padding-left: 0px;
+    }
+}

@@ -1,0 +1,348 @@
+{#
+---
+title: A minimal static site generator in 100 lines of Python using the Jinja templating engine
+date: 2025-09-27
+keywords: [Jinja, Python, Pygments]
+---
+#}
+
+{% extends "post.html" %}
+{% block post %}
+
+<p class="first-paragraph">
+    Ever since I was a university student, I've wanted to have a personal blog,
+    my little digital corner of the internet where I could share my thoughts,
+    projects, or anything interesting I stumble upon online. There are several
+    reasons why I wanted to start blogging. One is that I've learned a lot and
+    gained valuable insights from the blogs of many amazing people, and I
+    figured that by sharing what I create or the interesting things I discover,
+    I might be able to help others too. But the main reason is that blogging
+    could motivate me to keep working on my projects and learning new things,
+    serving as an anti-procrastination remedy for my natural tendency of leaving
+    things unfinished.
+</p>
+
+<p>
+    Like many others in my situation, I immediately opted for a simple static
+    website that I could host directly on GitHub using GitHub Pages (since at
+    the time of this writing it's free). There are a lot of static site
+    generators out there (like <a href="https://gohugo.io/">Hugo</a> or <a
+    href="https://jekyllrb.com/">Jekyll</a>) that could have helped me achieve
+    that, but as I started to look at the documentation I felt overwhelmed.
+    These tools are feature-packed, and don't get me wrong, they are awesome,
+    but I thought that they were a bit of an overkill for me: all I wanted was
+    to build the simplest blog on earth. Plus, I didn't really want to install
+    yet another program on my system just for that. That's when I remembered a
+    Python library called <a
+    href="https://jinja.palletsprojects.com/en/stable/">Jinja</a>, which I knew
+    about because some colleagues had used it in a project at work to
+    automatically generate configuration files.
+</p>
+
+<h3>Templates</h3>
+<p>
+    Jinja is a powerful Python library for templating. In short, it lets you
+    define <em>templates</em> (essentially text-based files) and, using custom
+    annotations that can be placed anywhere in the file, it can inject values or
+    even other templates. For example, consider the following simple template
+    (whose filename is <tt>simple.html</tt>):
+</p>
+
+{% call code("html") %}
+<html>
+    <!-- Headers, navbar and every other cmoponents shared by every other page -->
+    <div class="main-content">{% raw %}
+        {% block content %}
+        {% endblock %}
+    </div>{% endraw %}
+    <!-- ... -->
+</html>
+{% endcall %}
+
+<p>
+    You can then inject content that will be inserted between the two
+    {%raw%}<tt>{% block content %}{% endblock %}</tt>{%endraw%} directives,
+    simply by including this <tt>simple.html</tt> template from another template
+    file.
+</p>
+
+{% call code("html") %}
+<!-- First include the template... -->
+{%raw%}{% extends "simple.html" %}{%endraw%}
+<!-- ...then specify which content we want to put instead of the blocks inside the simple.html template -->
+{% raw %}{% block content %}
+<h1>This content has been injected by Jinja!</h1>
+<p>How cool is that huh?</p>
+{% endblock %}{% endraw %}
+{% endcall %}
+
+<p>
+    The content delimited by these <tt>content</tt> blocks will be inserted
+    into the included template, replacing the blocks with the same name (note
+    that there can be multiple blocks with different names). To perform this
+    substitution, we rely on Python. Here’s the snippet that reads the file from
+    the second example (let’s assume it’s saved as <tt>children.html</tt>):
+</p>
+
+{% call code("python") %}
+from jinja2 import Environment, FileSystemLoader
+# ROOT_DIR is the directory containing both "simple.html" and "chilren.html"
+env = Environment(loader=FileSystemLoader(ROOT_DIR))
+# load the template
+simple = env.get_template("children.html")
+# apply the substitutions
+simple_content = simple.render()
+# show the substituted content
+print(simple_content)
+{% endcall %}
+
+<p>
+    And that’s it! Of course, Jinja offers many other powerful features (for
+    example, you can inject custom values or even call Python functions directly
+    within your templates), but we’ll get to those later, as I explain how I
+    built this blog using templating and these other features.
+</p>
+
+<h3>General structure</h3>
+<p>
+    I started by writing a base template (<tt>base.html</tt>) that defines the
+    content shared across every page of the site. I won’t dump the entire
+    template here, but if you’re curious, you can check it out directly in the
+    <a href="#">repo</a>. In short, it defines a skeleton that includes the
+    stylesheets, a simple navigation header, and a footer. Between the navbar
+    and the footer, it defines a content block that other pages can use to
+    inject their own content. This way, all pages share the same header and
+    footer components.
+</p>
+<p>
+   I then created a folder with the templates for the various pages I wanted on
+   my site (<tt>index.html</tt>, <tt>blog.html</tt>). All of these templates
+   extend the base template. The first one is straightforward since it only
+   contains static content, but the second is more interesting. To generate
+   a list of posts based on those available in the blog, I used a special
+   <tt>for</tt> directive to loop through a list of posts provided by the Python
+   script. The details of how this list is created will be covered later.
+</p>
+<p>
+    Since each post follows more or less the same structure, I also created a
+    dedicated <tt>post.html</tt> template where individual posts inject their
+    specific content. Each post is therefore its own template extending
+    <tt>post.html</tt>, which in turn extends <tt>base.html</tt>. This creates a
+    three-level extension hierarchy (<tt>first_post.html -> post.html ->
+    base.html</tt>, where the arrow indicates the dependency). In other words,
+    the content of a specific post is injected into the general post template,
+    and that result is then injected into the base template, which finally
+    produces the final page. There’s not much to say about the base post
+    template itself, other than that it includes <a
+    href="https://www.mathjax.org/">MathJax</a> and it contains placeholders to
+    inject post-specific data (such as the title, date, and tags) from Python.
+</p>
+
+<h3>Generating posts</h3>
+
+<p>
+    I store each post in its own folder so it’s easier to locate them from the
+    code, and it also helps keep everything organized. For defining the metadata
+    of each post, I took inspiration from how <a href="#pandoc">Pandoc</a>
+    handles the same problem. I decided to include a simple YAML section with
+    the necessary information inside a comment (using <tt>{%raw%}{# this is a
+    comment! #}{%endraw%}</tt>), like this:
+</p>
+
+{% call code("html") %}
+{%raw%}{ extends "post.html" }
+{#--
+title: Blog Post Title!
+date: 1970-01-01
+tags: [tag0, tag1, tag2]
+--#}
+<!-- Blog post content -->
+{%endraw%}
+{% endcall %}
+
+<p>
+    I find this approach flexible enough because I don’t need to keep track of
+    posts with a separate file or any other mechanism that I find cumbersome. To
+    parse the post metadata, I simply search for comments containing the
+    metadata delimiters using a regex, then parse the extracted content with the
+    <a href="#pyYAML">PyYAML</a> library. The code is pretty self-explanatory.
+</p>
+
+{% call code("python") %}
+METADATA_PATTERN = re.compile(r'\{\#\s*---\s*\n(.*?)\n\s*---\s*\#\}', re.DOTALL)
+
+def extract_post_metadata(post_path: Path) -> Dict[str, str]:
+    """
+    Given a post, read its metadata block and returns the values as a dictionary
+    """
+    with open(post_path, 'r') as post_file:
+        content = post_file.read()
+
+    meta_match = METADATA_PATTERN.search(content)
+    # throw error if block is not found
+    if not meta_match: raise Exception("Unable to find metadata block")
+
+    yaml_content = meta_match.group(1)
+    metadata = yaml.safe_load(yaml_content)
+    return metadata
+{% endcall %}
+
+<p>
+    With this simple function combined with the metadata mechanism, I can easily
+    gather all posts and their relevant metadata in a single for loop.
+</p>
+
+{% call code("python") %}
+# collect all posts under ROOT_DIR/POSTS_DIR
+site_content = []
+for post_path in listdir(ROOT_DIR / POSTS_DIR):
+    post_path = POSTS_DIR / post_path
+    if post_path.suffix != ".html":
+        logger.info(f"Skipping {post_path}, not a valid file")
+        continue
+
+    logger.info(f"Found post: {post_path}")
+    # skip if no metadata block has been found
+    try:
+        post_meta = extract_post_metadata(ROOT_DIR / post_path)
+    except Exception as e:
+        logger.error(f"Skipping {post_path}, {str(e)}")
+        continue
+
+    # also collect the post for later rendering
+    post_template = env.get_template(str(post_path))
+    site_content.append((post_path, post_template, {"post": post_meta}))
+{% endcall %}
+
+<p>
+I can then use this information to generate the list of posts on the
+<tt>blog.html</tt> page.
+</p>
+
+{% call code("python") %}
+# needed for blog.html
+posts_metadata = {"posts": [(path, meta["post"]) for path, _, meta in site_content] }
+
+logger.info("Processing site pages...")
+# include base website pages (index, blog, etc..)
+site_content.extend([
+    ("index.html", env.get_template(str(PAGES_DIR / "index.html")), dict()),
+    ("blog.html", env.get_template(str(PAGES_DIR / "blog.html")), posts_metadata),
+])
+{% endcall %}
+
+<p>
+Finally, I simply iterate over each page in the <tt>site_content</tt> list
+(which contains the output page name, its corresponding Jinja template, and its
+injectable data) and render the template into an actual page.
+</p>
+
+{% call code("python") %}
+for output_name, template, context_data in site_content:
+    try:
+        html_content = template.render(**context_data)
+        output_file = OUTPUT_DIR / output_name
+        with open(output_file, 'w', encoding="utf-8") as f:
+            f.write(html_content.strip())
+            logger.info(f"Wrote: {output_file}")
+    except Exception as e:
+        logger.error(f"Error rendering {output_name}: {str(e)}")
+{% endcall %}
+
+Now, whenever I add or modify content on my website, I just need to run the
+Python build script to generate a folder (in my case, called <tt>generated</tt>)
+containing the entire site.
+
+<h3>Syntax Highlighting</h3>
+
+<p>
+    Obviously, a technical blog without syntax highlighting for code blocks quickly
+    becomes a pain to read. Luckily, others had already tackled this problem before
+    me, and I came across a <a href="https://hugopeters.me/posts/1/">blog post</a>
+    (which heavily inspired me) that showed how to solve it easily with <a
+    href="https://pygments.org/">Pygments</a> (to be completely honest, I
+    shamelessly copied that part of the code, thanks Hugo!).
+</p>
+
+<p>
+    The idea is pretty simple: write a function that takes a block of code and
+    returns the same code, but wrapped in HTML with syntax highlighting. Then, call
+    this function inside any template that needs to display code snippets. The
+    Pygments library makes this really straightforward.
+</p>
+
+{% call code("python") %}
+def highlight(language: str, code: str) -> str:
+    """
+    Highlight code using pygment
+    """
+    formatter = HtmlFormatter()
+    code = textwrap.dedent(code)
+    lex = pygments.lexers.get_lexer_by_name(language)
+    res = str(pygments.highlight(code, lex, formatter))
+    return res
+{% endcall %}
+
+<p>
+After that, we just need to bind this function with the Jinja templating engine.
+</p>
+
+{% call code("python") %}
+# ...
+env = environment(loader=filesystemloader(root_dir))
+env["highlight"] = highlight
+# ...
+{% endcall %}
+
+<p>
+Finally, to call this function more ergonomically within a template, we create a
+macro. Since every page should be able to use it, I placed it in the
+<tt>base.html</tt> template.
+</p>
+
+{% call code("html") %}{%raw%}
+<!-- ... -->
+<head>
+{% macro code(language, padding=True) -%}
+{% if padding %}<p>{% endif %}
+    {{ highlight(language, caller()) }}
+{% if padding %}</p>{% endif %}
+{%- endmacro %}{%endraw%}
+</head>
+<!-- ... -->
+{% endcall %}
+
+<p>
+With all this in place, we can now simply call the macro inside any post to
+display syntax-highlighted code, like this:
+</p>
+
+{% call code("html") %}{%raw%}
+<!-- ... -->
+<p>
+Paragraph section, now I output some code!
+</p>
+
+{% call code("python") %}
+def print_hello_world_param(param: str) -> None:
+    print("hello world!", param)
+{% endcall %}
+<!-- ... -->
+{%endraw%}
+{% endcall %}
+
+<p>
+And that’s basically it! I had a lot of fun working on this project, and I’m
+pretty happy with how it turned out. I know that in the future I’ll definitely
+add more features (I’m already thinking about adding macros for sidenotes and
+references) but that will be a story for another blog post.
+</p>
+
+<h3>References</h3>
+<ul>
+    <li><a href="https://hugopeters.me/posts/1/">Making a blog website</a> - Hugo Peters</li>
+    <li><a href="https://jinja.palletsprojects.com/en/stable/">Jinja Documentation</a></li>
+    <li><a href="https://pygments.org/">Pygments Documentation</a></li>
+</ul>
+
+{% endblock %}

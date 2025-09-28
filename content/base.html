@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        {# Reminder for me: when more macros will be added, put them in a
+        separate file and iclude it with the include directive #}
+        {% macro code(language, padding=True) -%}
+        {% if padding %}<p>{% endif %}
+            {{ highlight(language, caller()) }}
+        {% if padding %}</p>{% endif %}
+        {%- endmacro %}
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Favicons -->
+        <link rel="apple-touch-icon" sizes="180x180" href="/img/icons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/img/icons/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/img/icons/favicon-16x16.png">
+        <link rel="icon" type="image/x-icon" href="/img/icons/favicon.ico">
+        <!-- Styles -->
+        <link rel="stylesheet" href="/css/styles.css" />
+        <link rel="stylesheet" href="/css/pygments.css" />
+        <title>{% block title %}Matteo Brunello{% endblock %}</title>
+    </head>
+    <body>
+        <div class="body-container">
+            <header>
+                <ul>
+                    <li class="logo">
+                        <span class="color-red">M</span>atteo
+                        <span class="color-red">B</span>runello
+                    </li>
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/blog.html">Blog</a></li>
+                </ul>
+            </header>
+            <div class="main-content">
+                {% block content %}
+                <h1 class="post-title">Looks like there is nothing here.</h1>
+                {% endblock %}
+            </div>
+            <footer>
+                <p>Matteo Brunello, 2025 - 2026</p>
+            </footer>
+        </div>
+    </body>
+</html>
