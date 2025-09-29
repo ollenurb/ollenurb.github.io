@@ -108,7 +108,7 @@ print(simple_content)
     I started by writing a base template (<tt>base.html</tt>) that defines the
     content shared across every page of the site. I won’t dump the entire
     template here, but if you’re curious, you can check it out directly in the
-    <a href="#">repo</a>. In short, it defines a skeleton that includes the
+    <a href="https://github.com/ollenurb/ollenurb.github.io">repo</a>. In short, it defines a skeleton that includes the
     stylesheets, a simple navigation header, and a footer. Between the navbar
     and the footer, it defines a content block that other pages can use to
     inject their own content. This way, all pages share the same header and
@@ -143,7 +143,7 @@ print(simple_content)
 <p>
     I store each post in its own folder so it’s easier to locate them from the
     code, and it also helps keep everything organized. For defining the metadata
-    of each post, I took inspiration from how <a href="#pandoc">Pandoc</a>
+    of each post, I took inspiration from how <a href="https://pandoc.org/">Pandoc</a>
     handles the same problem. I decided to include a simple YAML section with
     the necessary information inside a comment (using <tt>{%raw%}{# this is a
     comment! #}{%endraw%}</tt>), like this:
@@ -165,7 +165,7 @@ tags: [tag0, tag1, tag2]
     posts with a separate file or any other mechanism that I find cumbersome. To
     parse the post metadata, I simply search for comments containing the
     metadata delimiters using a regex, then parse the extracted content with the
-    <a href="#pyYAML">PyYAML</a> library. The code is pretty self-explanatory.
+    <a href="https://pyyaml.org/">PyYAML</a> library. The code is pretty self-explanatory.
 </p>
 
 {% call code("python") %}

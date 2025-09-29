@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # declare assets, too lazy to put them in a separate file
 ROOT_DIR = Path("content")
-ASSETS = ["css", "img"] # you can add other static assets here
+ASSETS = ["css", "img", "pdfs"] # you can add other static assets here
 POSTS_DIR = Path("posts")
 PAGES_DIR = Path("pages")
 OUTPUT_DIR = Path("generated")
