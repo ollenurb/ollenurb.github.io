@@ -1,0 +1,89 @@
+{#
+---
+title: The magic of automatic differentiation
+date: 2025-10-03
+keywords: [Machine Learning, Math]
+---
+#}
+
+{% extends "post.html" %}
+{% block post %}
+
+<p class="first-paragraph">
+    When I took my university course on deep learning, our professor explained
+    the backpropagation algorithm by deriving the gradient computation
+    symbolically using the chain rule, for a simple fully connected model with
+    one hidden layer. It quickly became clear, though, that this approach was
+    unfeasible for more complex and larger model architectures (not to mention
+    it being extremely tedious and error-prone). But then, during our lab
+    sessions with PyTorch, I discovered that in practice, one can simply call
+    the <tt>backward()</tt> method, and the framework automatically computes the
+    gradients for any arbitrary architecture. It really felt like magic to me.
+    This post is my personal attempt to explain the theory behind the algorithm
+    that makes that magic real: reverse-mode automatic differentiation.
+</p>
+<h3>Finite Difference</h3>
+<p>
+    Many scientific problems require some form of derivative computation.
+    Naturally, having an efficient and automatic way to compute derivatives on a
+    computer is extremely important.
+    Let's assume for example that we have a simple function \(f(x) = 2
+    \sin(x^3)^2\) for which we want to compute its derivative.
+    In a computer program we would represent this function straightforwardly
+    like this:
+    {% call code("python") %}
+    def f(x: float) -> float:
+        return 2 * math.sin(x**3)**2
+    {% endcall %}
+    A naive approach to compute its derivative would be to directly apply the
+    classical definition of a derivative (the one many of you probably remember
+    from high school calculus).
+    \[
+    f'(x_i) = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h}
+    \]
+    Of course we can't implement limits with quantities that goes to zero in the
+    computer due to the finite precision of floating point numbers, but the idea
+    is that the derivative value will become closer to the actual value as the
+    value of \(h\) becomes closer to \(0\). In this way, we can actually get an
+    approximation of the real value of the derivative with this simple
+    implementation.
+    {% call code("python") %}
+    def df(x: float) -> float:
+        h = e-10
+        return (f(x) - f(x + h)) / h
+    {% endcall %}
+    It should not come as a surprise that this technique is called <em>finite
+    difference</em>, since it relies on a small but finite increment \(h\)
+    instead of an infinitesimal differential (in the abstract mathematical
+    sense). The main drawback of this approach is that, due to the finite
+    precision of floating point arithmetic, we may encounter catastrophic
+    cancellation when \(h\) is chosen too small (on the order of machine
+    \(\epsilon\)), whereas if \(h\) is not small enough, the approximation
+    becomes inaccurate.
+</p>
+
+<h3>Symbolical Derivation</h3>
+<p>
+    To solve this problem, one may straightforwardly think: why not just derive
+    symbolically and then evaluate the symbolical derivative in that point? In
+    this way, we would be able to have the exact value (up to machine precision)
+    of the derivative, without the numerical problems with the finite difference
+    error. The main downside of this approach can be explained with a simple
+    example, consider the following function \(g(x) = (x+1)(x+2)(x+3)\). If we
+    derive it symbolically we get:
+    \[
+    g'(x) = (x+2)(x+3) + (x+1)(x+3) + (x+1)(x+2)
+    \]
+    You can immediately see that the number of terms in the expression is
+    growing in a combinatorial way. This is a common example of a phenomenon
+    called "expression swell", where the size of the expression explode in size.
+    This may cause extremely long expression for relatively complex function
+    that cannot even fit in memory.
+</p>
+
+<h3>References</h3>
+<ul>
+    <li><a href="#">First</a> - Hugo Peters</li>
+</ul>
+
+{% endblock %}

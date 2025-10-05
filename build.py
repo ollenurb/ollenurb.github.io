@@ -12,6 +12,7 @@ from posix import listdir
 from jinja2 import Environment, FileSystemLoader
 from pygments.formatters import HtmlFormatter
 
+
 # easy logging
 logging.basicConfig(
     level=logging.INFO,
