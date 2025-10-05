@@ -83,16 +83,15 @@ keywords: [Machine Learning, Math]
 
 <h3>Automatic Differentiation</h3>
 <p>
-    Automatic differentiation is a technique that solve the problems of both of
-    these approaches. To understand autodiff, we need to start from concept that
-    lies at the core of the method: the chain rule.
+    To explain the method that solves the problems that plagues both of these
+    approaches we should start from a simple yet powerful concept in math: the
+    chain rule.
     \[
     f'(g(x)) = f'(g(x)) \cdot g'(x)
     \]
-    In practice, this formula is commonly
-    written partial notation like so
+    (In practice, this formula is more oftern written in partial notation).
     \[
-    \frac{\partial f \cdot g)}{\partial x} = \partial{}
+    \frac{\partial f(g(x))}{\partial x} = \frac{\partial f(g(x))}{\partial g(x)}\frac{\partial g(x)}{\partial x}
     \]
     Intuitively, this formula tells us that the rate of change of a composite
     function is the rate of change of the outer function multiplied by the rate
@@ -101,8 +100,17 @@ keywords: [Machine Learning, Math]
     complexity can be seen as a composite function of more elementary function,
     we can recursively split our function into progressively elementary
     functions and then simply apply the chain rule.
-    For example, if we consider the function from the example above, we can say:
+    For example, if we consider the function from the example above, we can
+    decompose it into these intermediate values.
     \[z = 2u^2 \quad u = sin(v) \quad v = x^2\]
+    Then we can simply apply the chain rule.
+    \[
+    \frac{\partial z}{\partial x} =
+    \frac{\partial z}{\partial u}
+    \frac{\partial u}{\partial v}
+    \frac{\partial v}{\partial x}
+    \]
+
 </p>
 <h3>Forward Mode</h3>
 <p>
