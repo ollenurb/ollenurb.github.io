@@ -65,20 +65,48 @@ keywords: [Machine Learning, Math]
 <h3>Symbolical Derivation</h3>
 <p>
     To solve this problem, one may straightforwardly think: why not just derive
-    symbolically and then evaluate the symbolical derivative in that point? In
-    this way, we would be able to have the exact value (up to machine precision)
-    of the derivative, without the numerical problems with the finite difference
-    error. The main downside of this approach can be explained with a simple
-    example, consider the following function \(g(x) = (x+1)(x+2)(x+3)\). If we
-    derive it symbolically we get:
+    symbolically and then evaluate the symbolical derivative at a specific
+    point? In this way, oune should be able to have the exact value (up to
+    machine precision) of the derivative, without the numerical problems with
+    the finite difference method. The main downside of this approach can be
+    explained with a simple example. Consider the following function \(g(x) =
+    (x+1)(x+2)(x+3)\), if we derive it symbolically we get:
     \[
     g'(x) = (x+2)(x+3) + (x+1)(x+3) + (x+1)(x+2)
     \]
-    You can immediately see that the number of terms in the expression is
-    growing in a combinatorial way. This is a common example of a phenomenon
-    called "expression swell", where the size of the expression explode in size.
-    This may cause extremely long expression for relatively complex function
+    It is obvious that the number of terms in the expression is growing in a
+    combinatorial way. This is a common example of a phenomenon called
+    "expression swell", where the size of the expression explodes in size. This
+    problem may cause extremely long expression for relatively complex function
     that cannot even fit in memory.
+</p>
+
+<h3>Automatic Differentiation</h3>
+<p>
+    Automatic differentiation is a technique that solve the problems of both of
+    these approaches. To understand autodiff, we need to start from concept that
+    lies at the core of the method: the chain rule.
+    \[
+    f'(g(x)) = f'(g(x)) \cdot g'(x)
+    \]
+    In practice, this formula is commonly
+    written partial notation like so
+    \[
+    \frac{\partial f \cdot g)}{\partial x} = \partial{}
+    \]
+    Intuitively, this formula tells us that the rate of change of a composite
+    function is the rate of change of the outer function multiplied by the rate
+    of change of the inner function. We can use this main idea to build our
+    algorithm. The idea is rather simple: since any function of arbitrary
+    complexity can be seen as a composite function of more elementary function,
+    we can recursively split our function into progressively elementary
+    functions and then simply apply the chain rule.
+    For example, if we consider the function from the example above, we can say:
+    \[z = 2u^2 \quad u = sin(v) \quad v = x^2\]
+</p>
+<h3>Forward Mode</h3>
+<p>
+
 </p>
 
 <h3>References</h3>
