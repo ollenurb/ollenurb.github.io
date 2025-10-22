@@ -1,143 +1,141 @@
 {# ---
-title: The magic of automatic differentiation
-date: 2025-10-03
-keywords: [Machine Learning, Math]
+title: Reverse Mode Automatic Differentiation
+date: 2025-10-17
+keywords: [Machine Learning, Math, Numerical Programming]
 --- #}
-{% extends "post.html" %} {% block post %}
+
+{% extends "post.html" %}
+{% block post %}
 
 <p class="first-paragraph">
-    When our professor explained the backpropagation algorithm during a deep
-    learning course, he walked us through the manual derivation of the gradients
-    for a simple fully connected model with one hidden layer. It quickly became
-    clear to me that that this approach was unfeasible for more complex and
-    larger model architectures (not to mention it being extremely tedious and
-    error-prone). A bit later in the course, during our lab sessions with
-    PyTorch, I discovered that in practice you can simply call the <a
+    The first time they explained to me the backpropagation algorithm, it was
+    done by simbolically derive from scratch the update rule of the weights of a
+    neural network. Obviously, this approach is suitable only when the
+    architecture is fairly simple, making it unfeasable for more complex and
+    larger architectures. Common deep learning frameworks such as PyTorch,
+    allows you to create neural networks by means of applying operations to
+    tensors. Then, to get the numerical gradient of that network (no matter how
+    complex) you can simply call the <a
     href="https://docs.pytorch.org/docs/stable/generated/torch.Tensor.backward.html"><tt>backward()</tt></a>
-    method, and the framework takes care of computing all the gradients for you,
-    no matter how complicated the network architecture is. At first, it honestly
-    felt like magic, so I immediately started digging deeper to understand how
-    these frameworks were able to pull this off. This post is my personal
-    attempt to explain the algorithm that makes that magic possible:
-    reverse-mode automatic differentiation.
+    method. This post aim to explain the basic idea of the algorithm behind that
+    method: <i>reverse mode automatic differentiation</i>.
 </p>
-<h3>Finite Difference</h3>
+
+<h3>Computation Graphs</h3>
+
 <p>
-    Many scientific problems require some form of derivative computation.
-    Naturally, having an efficient and automatic way to compute derivatives on a
-    computer is extremely important. Let's assume for example that we have a
-    simple function \(f(x) = 2 \sin(x^3)^2\) for which we want to compute its
-    derivative. In a computer program we would represent this function
-    straightforwardly like this:
+    Having an efficient and automatic way to precisely compute derivatives on a
+    computer is extremely important for many scientific areas. Let's assume for
+    example that we have a simple function \(f(x) = 2 [\sin(x^3)^2]\) for which we
+    want to compute its derivative. In a computer program we would represent this
+    function straightforwardly like this:
     {% call code("python") %}
-    def f(x: float) ->
-        float: return 2 * math.sin(x**3)**2
+    def f(x: float) -> float:
+        return 2 * math.sin(x**3)**2
     {% endcall %}
-    A naive approach to
-    compute its derivative would be to directly apply the classical definition
-    of a derivative (the one many of you probably remember from high school
-    calculus).
-    \[ f'(x) = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h} \]
-    Of course we can't implement limits with quantities that goes to zero in the
-    computer due to the finite precision of floating point numbers, but the idea
-    that we can get from this formula is that the derivative value will become
-    closer to the actual value as the value of \(h\) becomes closer to \(0\). In
-    this way, we can actually get an approximation of the real value of the
-    derivative with this simple
-    implementation.
+    When this function is executed, it's actually evaluated in parts. The order of
+    the evaluation of each single part is dictated directly by the availability of
+    its inputs. For instance, the innermost function value (\(x^3\)) is evaluated
+    first, since it depends only on the input (\(x\)), which is the only available
+    at that point.
+    For clarity, one can call this intermediate value \(v_0\). Then \(v_0\) is
+    simply forwarded to the next function. Again, we give an alias to that value,
+    for example \(v_1 = sin(v_0)\). This chain continues in the same way until the
+    final output is reached. To make things more clear, we can write this
+    explicitly as follows:
     {% call code("python") %}
-    def df(x: float) -> float:
-        h = e-10
-        return (f(x) - f(x + h)) / h
+    def f(x: float) -> float:
+        v_0 = x**3
+        v_1 = sin(v_0)
+        v_2 = v_1**2
+        v_3 = 2*v_2
+        return v_3
     {% endcall %}
-    It should not come as a surprise that this technique is called
-    <em>finite difference</em>, since it relies on a small but finite
-    increment \(h\) instead of an infinitesimal differential (in the
-    abstract mathematical sense). The main drawback of this approach is
-    that, due to the finite precision of floating point arithmetic, we may
-    encounter catastrophic cancellation when \(h\) is chosen too small (on
-    the order of machine \(\epsilon\)), whereas if \(h\) is not small
-    enough, the approximation becomes inaccurate.
+    It's not surprising that all these series of intermediate values are called
+    the <em>evaluation trace</em> of a function. We could also represent the
+    flow of computations succintly with a directed graph, where nodes are
+    <em>functions</em> while <em>edges</em> represents input/output
+    relationships between functions. In the following example I have annotated
+    the edges with their corresponding value alias for clarity.
 </p>
 
-<h3>Symbolical Derivation</h3>
+<p></p>
+<img src="/img/02_computational_graph_01.png" style="padding: 2em;"/>
+<p></p>
+
 <p>
-    To solve this problem, one may think: why not just derive symbolically and
-    then evaluate the symbolical derivative at a specific point? In this way,
-    one should be able to have the exact value (up to machine precision) of the
-    derivative, without the numerical problems tat plagues the finite difference
-    method. The main downside of this approach can be explained with a simple
-    example. Consider the following function \(g(x) = (x+1)(x+2)(x+3)\), if we
-    derive it symbolically we get:
-    \[
-    g'(x) = (x+2)(x+3) + (x+1)(x+3) + (x+1)(x+2)
-    \]
-    It is obvious that the number of terms in the expression is growing in a
-    combinatorial way. This is a common example of a phenomenon called
-    <em>"expression swell"</em>, where the size of the derivative expression
-    explodes in size with respect to the size of the expression of the original
-    function. This problem may cause extremely long expression for relatively
-    complex function that cannot even fit in memory.
+    While for this simple example the graph is quite straightforward, it is a
+    powerful tool for visualizing how values flow through the computation of an
+    expression.
 </p>
 
-<h3>Automatic Differentiation</h3>
+<h3>The Chain Rule</h3>
 <p>
-    To explain the method that solves the problems that plagues both of these
-    approaches we should start from a simple yet powerful concept in math: the
-    chain rule. \[ f'(g(x)) = f'(g(x)) \cdot g'(x) \] (In practice, this formula
-    is more oftern written in partial notation). \[ \frac{\partial
-    f(g(x))}{\partial x} = \frac{\partial f(g(x))}{\partial g(x)}\frac{\partial
-    g(x)}{\partial x} \] Intuitively, this formula tells us that the rate of
-    change of a composite function is the rate of change of the outer function
-    multiplied by the rate of change of the inner function. We can use this main
-    idea to build our algorithm. The idea is rather simple: since any function
-    of arbitrary complexity can be seen as a composite function of more
-    elementary function, we can recursively split our function into
-    progressively elementary functions and then simply apply the chain rule. For
-    example, if we consider the function from the example above, we can
-    decompose it into these intermediate values.
+    The core idea behind automatic differentiation is also a powerful concept in
+    math: the <em>chain rule</em>.
     \[
-    z = 2u^2 \quad u = sin(v) \quad n = x^2
+    f'(g(x)) = f'(g(x)) \cdot g'(x)
     \]
-    Then we can simply apply the chain rule.
+    Even tough you will see this formula written more often in partial notation
+    like as follows.
     \[
-    \frac{\partial z}{\partial x} = \frac{\partial z}{\partial u} \frac{\partial
-    u}{\partial n} \frac{\partial n}{\partial x}
+    \frac{\partial f(g(x))}{\partial x} = \frac{\partial f(g(x))}{\partial
+    g(x)}\frac{\partial g(x)}{\partial x}
     \]
-    <!--The order of evaluation of these partial is crucial, since it gives us the
-    two flavours of autodiff.-->
-
-    If we look closely, we can compute these partial derivatives from two
-    different starting point. If we start from the rightmost term, we can
-    compute that derivative right away, because the only input whose $n$ depends
-    on is \(x\), which is the input of the whole function itself. We can then
-    propagate the previous gradients to the subsequent computations
-    </p>
+    Intuitively, the chain rule tells us that the rate of change of a composite
+    function is the rate of change of the outer function multiplied by the rate
+    of change of the inner function. This formula can also be recursively
+    applied in cases of nested composite function until the end of the
+    expression. For instance, we can apply it to our example.
+    \[
+    \begin{align}
+    \frac{\partial f}{\partial x} &=
+        \frac{\partial f}{\partial v_3}\underbrace{\frac{\partial v_3}{\partial x}}\\[.5em]
+     &= \frac{\partial f}{\partial v_3}\frac{\partial v_3}{\partial v_2}\underbrace{\frac{\partial v_2}{\partial x}}\\[.5em]
+     &= \frac{\partial f}{\partial v_3}\frac{\partial v_3}{\partial v_2}\frac{\partial v_2}{\partial v_1}\underbrace{\frac{\partial v_1}{\partial x}}\\[.5em]
+     &= \frac{\partial f}{\partial v_3}\frac{\partial v_3}{\partial v_2}\frac{\partial v_2}{\partial v_1}\frac{\partial v_1}{\partial v_0}\frac{\partial v_0}{\partial x}\\[.5em]
+    \end{align}
+    \]
+    I have put underbraces to indicate terms where the chain rule can be
+    re-applied for clarity. The trick here is to treat \(v_i\) as a function of
+    \(v_{i-1}\) since (in this particular case) it's its direct input. If you
+    want, you can expand the entire expression by substituting all the values so
+    that it's written only in term of the input variable \(x\). In that way it
+    should be more clear how the formula works and how it has been applied here.
+</p>
+<p>
+    We can now <em>simbolically</em> derive each term of the equation
+</p>
+<p>
+    If we look closely at the expanded formula, we evaluate these product from
+    two different starting point. This decision basically determines the two
+    types of automatic differentiation: <em>forward</em> and <em>backward</em>
+    mode.
+</p>
 
 <h3>Forward Mode</h3>
 
 <p>
-    </p>
+    If we start from the rightmost term \(\frac{\partial v_0}{\partial x}\) in
+    the chain rule expansion, we can compute that derivative immediately,
+    because the only input whose \(v_0\) depends on is \(x\).
+</p>
 
 <p>
-    If we start the computation from the first intermediate value (which in our
-    example is \(v\)), we obtain the first flavour of automatic differentiation,
-    which is the <em>forward accumulation</em> mode. To do that, we basically
-    derive each intermediate variable \(v_i\) with respect to the input of the
-    entire expression \(\dot{v_i} = \frac{\partial v_i}{\partial x}\). To do
-    that, we can re-use the previously discussed chain rule.
-    \[
-    \begin{split}
-    \dot{n} = \frac{\partial n}{\partial x} = \frac{\partial n}{\partial x}\frac{\partial x}{\partial x}\\[.5em]
-    \dot{u} = \frac{\partial u}{\partial x} = \frac{\partial u}{\partial n}\frac{\partial n}{\partial x}\\[.5em]
-    \dot{z} = \frac{\partial z}{\partial x} = \frac{}{}
-    \end{split}
-    \]
+We can simulate this logic programmatically quite easily:
+</p>
+
+<h3>Conclusion</h3>
+<p>
+In fact, automatic differentiation is nothing more than a method to evaluate the
+chain rule.
 </p>
 
 <h3>References</h3>
 <ul>
-    <li><a href="#">First</a> - Hugo Peters</li>
+    <li><a href="#">Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation</a> - Griewank, Walther</li>
+    <li><a href="https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation">Reverse-mode automatic differentiation: a tutorial</a> - Rufflewind</li>
+
 </ul>
 
 {% endblock %}

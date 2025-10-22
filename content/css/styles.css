@@ -10,7 +10,6 @@
 * {
     box-sizing: border-box;
 }
-
 body,
 html {
     font-family: "Noto Serif", serif;
@@ -141,6 +140,13 @@ footer p {
 
 p {
     line-height: 1.5rem;
+}
+
+img {
+    width: 80%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 .first-paragraph::first-letter {
