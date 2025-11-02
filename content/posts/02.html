@@ -155,23 +155,35 @@ keywords: [Machine Learning, Math, Numerical Programming]
     We end up with the same final derivative, but the terms can be expanded in
     two different orders. In the first expansion, the terms accumulate from
     <em>left to right</em> (starting near the output), and in the other, from
-    <em>right to left</em> (starting near the input).
-    In other words, in the first case, we assume that the leftmost term is
-    already known and expand the rightmost term.
+    <em>right to left</em> (starting near the input). In other words, in the
+    first case, we assume that the leftmost term is already known and expand the
+    rightmost term.
     \[
-    \frac{\partial s}{\partial t} = \frac{\partial s}{\partial u} \hbbox{\frac{\partial u}{\partial t}}
+    \frac{\partial s}{\partial t} = \frac{\partial s}{\partial u}
+    \hbbox{\frac{\partial u}{\partial t}}
     \]
     In the second case we do the opposite, expanding the leftmost term while
     assuming the other is already known.
     \[
-    \frac{\partial s}{\partial t} = \hbbox{\frac{\partial s}{\partial u}} \frac{\partial u}{\partial t}
+    \frac{\partial s}{\partial t} = \hbbox{\frac{\partial s}{\partial u}}
+    \frac{\partial u}{\partial t}
     \]
+    If we look at both the expanded formulas, we can see that if we
+    <em>compute</em> these terms following the order imposed by the parentheses,
+    we are in fact accumulating the derivatives (just like in a reduction
+    operation) in two different orders.
 </p>
-
-
 <p>
-    For now, we are still speaking <em>simbolically</em>. We know
+    So far the discussion might sound like symbolic math, but automatic
+    differentiation actually does something different. It never builds a giant
+    symbolic derivative of your whole expression. Instead, it computes the
+    <em>numeric value</em> of the derivative right at the point where you need
+    it. The trick is that each part of the chain rule can be evaluated
+    numerically, so there's no need to materialize the entire derivative
+    expression.
 </p>
+
+<h3>Forward Mode</h3>
 
 
 <h3>References</h3>
