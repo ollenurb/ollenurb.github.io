@@ -17,8 +17,8 @@ keywords: [Machine Learning, Math, Numerical Programming]
     tensors. Then, to get the numerical gradient of that network (no matter how
     complex) you can simply call the <a
     href="https://docs.pytorch.org/docs/stable/generated/torch.Tensor.backward.html"><tt>backward()</tt></a>
-    method. This post aim to explain the basic idea of the algorithm behind that
-    method: <i>reverse mode automatic differentiation</i>.
+    method. This post is my personal attempt at explaining the basic idea of the
+    algorithm behind that method: <i>reverse mode automatic differentiation</i>.
 </p>
 
 <h3>Computation Graphs</h3>
@@ -64,84 +64,121 @@ keywords: [Machine Learning, Math, Numerical Programming]
 <p></p>
 
 <p>
-    While for this simple example the graph is quite straightforward, it is a
-    powerful tool for visualizing how values flow through the computation of an
-    expression.
+    With this compact graphical representation we can show exectly dependencies
+    between functions and the flow of values though the computational graph. I
+    will use them extensively in this post because they happen to be also quite
+    useful to visualize the *gradients* flow through the computation graph,
+    which may help to better ground the concepts.
 </p>
 
 <h3>The Chain Rule</h3>
+
 <p>
     The core idea behind automatic differentiation is also a powerful concept in
-    math: the <em>chain rule</em>.
+    math that many of us may remember from high school calculus: the <em>chain
+    rule</em>.
     \[
-    f'(g(x)) = f'(g(x)) \cdot g'(x)
+    \frac{\partial s}{\partial t} = \frac{\partial s}{\partial u} \frac{\partial u}{\partial t}
     \]
-    Even tough you will see this formula written more often in partial notation
-    like as follows.
-    \[
-    \frac{\partial f(g(x))}{\partial x} = \frac{\partial f(g(x))}{\partial
-    g(x)}\frac{\partial g(x)}{\partial x}
-    \]
-    Intuitively, the chain rule tells us that the rate of change of a composite
-    function is the rate of change of the outer function multiplied by the rate
-    of change of the inner function. This formula can also be recursively
-    applied in cases of nested composite function until the end of the
-    expression. For instance, we can apply it to our example.
+    Briefly speaking, this formula basically tells us that if a value \(s\)
+    depends directly on another variable \(u\), which in turn depends on \(t\),
+    then the way \(s\) changes with respect to \(t\) can be found by multiplying
+    how \(s\) changes with \(u\) by how \(u\) changes with \(t\). If we want to
+    avoid the word-twisting definition, and stick to plain terms, it’s like
+    tracing how a small change in \(t\) ripples through \(u\) and finally
+    affects \(s\).
+</p>
+<p>
+    Sometimes this formula is expressed with \(s = f(x)\) and \(t = x\), but I
+    deliberately wrote it in the most general form to make more clear that this
+    rule can be applied repeatedly for each intermediate variable, until there
+    are no more intermediate variables and the "end" of the expression is
+    reached. Following the previous analogy, it can be roughly compared to
+    tracing how a small change in the input ripples through each step of the
+    computation all the way to the final output.
+</p>
+<p>
+    Looking at the formula, we can note that there are basically three things we
+    can choose when applying the chain rule:
+    <ul>
+        <li>The output variable \(s\) to differentiate.</li>
+        <li>The input variable \(t\) we differentiate with respect to.</li>
+        <li>The intermediate variable \(u\) from which we first apply the chain rule.</li>
+    </ul>
+    The choice of the output and input variables are not that interesting, they
+    basically determine the sub-expression of a given expression (even the
+    entire expression, obviously) to differentiate. The choice of the
+    intermediate variable \(u\), on the other hand, determines the
+    <em>direction</em> from where the chain rule is applied: from <em>inputs to
+    outputs</em> or from <em>outputs to inputs</em>.
+</p>
+
+<p>
+    Let's get a little bit more concrete by deriving the example expression by
+    means of the chain rule. We start by setting the input and output variables
+    \(s = v_3\) and \(t = x\). Now, if we want to start from the output and move
+    towards the input, we have to set \(u = v_2\), and then recursively apply
+    the chain rule going <em>backwards</em>. This is also the most common way
+    the chain rule is applied.
     \[
     \begin{align}
-    \frac{\partial f}{\partial x} &=
-        \frac{\partial f}{\partial v_3}\underbrace{\frac{\partial v_3}{\partial x}}\\[.5em]
-     &= \frac{\partial f}{\partial v_3}\frac{\partial v_3}{\partial v_2}\underbrace{\frac{\partial v_2}{\partial x}}\\[.5em]
-     &= \frac{\partial f}{\partial v_3}\frac{\partial v_3}{\partial v_2}\frac{\partial v_2}{\partial v_1}\underbrace{\frac{\partial v_1}{\partial x}}\\[.5em]
-     &= \frac{\partial f}{\partial v_3}\frac{\partial v_3}{\partial v_2}\frac{\partial v_2}{\partial v_1}\frac{\partial v_1}{\partial v_0}\frac{\partial v_0}{\partial x}\\[.5em]
+    \frac{\partial v_3}{\partial x}
+     &= \frac{\partial v_3}{\partial v_2} \hbbox{\frac{\partial v_2}{\partial x}}\\[.5em]
+     &= \frac{\partial v_3}{\partial v_2}\left( \frac{\partial v_2}{\partial v_1}\hbbox{\frac{\partial v_1}{\partial x}} \right ) \\[.5em]
+     &= \frac{\partial v_3}{\partial v_2}\left( \frac{\partial v_2}{\partial v_1} \left ( \frac{\partial v_1}{\partial v_0}\frac{\partial v_0}{\partial x}\right ) \right ) \\[.5em]
     \end{align}
     \]
-    I have put underbraces to indicate terms where the chain rule can be
-    re-applied for clarity. The trick here is to treat \(v_i\) as a function of
-    \(v_{i-1}\) since (in this particular case) it's its direct input. If you
-    want, you can expand the entire expression by substituting all the values so
-    that it's written only in term of the input variable \(x\). In that way it
-    should be more clear how the formula works and how it has been applied here.
 </p>
 <p>
-    We can now <em>simbolically</em> derive each term of the equation
-</p>
-<p>
-    If we look closely at the expanded formula, we evaluate these product from
-    two different starting point. This decision basically determines the two
-    types of automatic differentiation: <em>forward</em> and <em>backward</em>
-    mode.
-</p>
-
-<h3>Forward Mode</h3>
-
-<p>
-    If we start from the rightmost term \(\frac{\partial v_0}{\partial x}\) in
-    the chain rule expansion, we can compute that derivative immediately,
-    because the only input whose \(v_0\) depends on is \(x\).
+    I have put boxes around the terms of the expression where the recursive
+    relation is applied and I also delimited the expansion with parentheses, to
+    make the <em>direction</em> of the expansion more clear.
 </p>
 
 <p>
-We can simulate this logic programmatically quite easily:
+    Conversely, we can also apply the rule on the other order. To do so, we
+    choose \(u = v_0\) and recursively apply the rule until we reach the output.
+    It may seems weird initially, but I suggest to focus exclusively on the
+    symbolic application of the formula (using the computational graph as a
+    guide at each step may also help).
+    \[
+    \begin{align}
+        \frac{\partial v_3}{\partial x}
+        &= \hbbox{\frac{\partial v_3}{\partial v_0}}\frac{\partial v_0}{\partial x}\\[.5em]
+        &= \left ( \hbbox{\frac{\partial v_3}{\partial v_1}}\frac{\partial v_1}{\partial v_0} \right) \frac{\partial v_0}{\partial x}\\[.5em]
+        &= \left( \left ( \frac{\partial v_3}{\partial v_2}\frac{\partial v_2}{\partial v_1} \right ) \frac{\partial v_1}{\partial v_0} \right) \frac{\partial v_0}{\partial x}\\[.5em]
+    \end{align}
+    \]
 </p>
 
-<h3>Conclusion</h3>
 <p>
-In fact, automatic differentiation is nothing more than a method to evaluate the
-chain rule.
+    We end up with the same final derivative, but the terms can be expanded in
+    two different orders. In the first expansion, the terms accumulate from
+    <em>left to right</em> (starting near the output), and in the other, from
+    <em>right to left</em> (starting near the input).
+    In other words, in the first case, we assume that the leftmost term is
+    already known and expand the rightmost term.
+    \[
+    \frac{\partial s}{\partial t} = \frac{\partial s}{\partial u} \hbbox{\frac{\partial u}{\partial t}}
+    \]
+    In the second case we do the opposite, expanding the leftmost term while
+    assuming the other is already known.
+    \[
+    \frac{\partial s}{\partial t} = \hbbox{\frac{\partial s}{\partial u}} \frac{\partial u}{\partial t}
+    \]
 </p>
 
-<h3></h3>
+
 <p>
-    
-
+    For now, we are still speaking <em>simbolically</em>. We know
 </p>
+
 
 <h3>References</h3>
 <ul>
     <li><a href="#">Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation</a> - Griewank, Walther</li>
     <li><a href="https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation">Reverse-mode automatic differentiation: a tutorial</a> - Rufflewind</li>
-
+    <li><a href="https://dl.acm.org/doi/abs/10.5555/3122009.3242010">Automatic differentiation in machine learning: a survey</a> - Atilim Gunes Baydin et. al.</li>
 </ul>
 
 {% endblock %}
