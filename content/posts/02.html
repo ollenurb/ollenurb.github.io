@@ -40,7 +40,7 @@ keywords: [Machine Learning, Math, Numerical Programming]
     at that point.
     For clarity, one can call this intermediate value \(v_0\). Then \(v_0\) is
     simply forwarded to the next function. Again, we give an alias to that value,
-    for example \(v_1 = sin(v_0)\). This chain continues in the same way until the
+    for example \(v_1 = \sin{v_0}\). This chain continues in the same way until the
     final output is reached. To make things more clear, we can write this
     explicitly as follows:
     {% call code("python") %}
@@ -88,6 +88,7 @@ keywords: [Machine Learning, Math, Numerical Programming]
     tracing how a small change in \(t\) ripples through \(u\) and finally
     affects \(s\).
 </p>
+
 <p>
     Sometimes this formula is expressed with \(s = f(x)\) and \(t = x\), but I
     deliberately wrote it in the most general form to make more clear that this
@@ -97,6 +98,7 @@ keywords: [Machine Learning, Math, Numerical Programming]
     tracing how a small change in the input ripples through each step of the
     computation all the way to the final output.
 </p>
+
 <p>
     Looking at the formula, we can note that there are basically three things we
     can choose when applying the chain rule:
@@ -129,6 +131,7 @@ keywords: [Machine Learning, Math, Numerical Programming]
     \end{align}
     \]
 </p>
+
 <p>
     I have put boxes around the terms of the expression where the recursive
     relation is applied and I also delimited the expansion with parentheses, to
@@ -173,22 +176,87 @@ keywords: [Machine Learning, Math, Numerical Programming]
     we are in fact accumulating the derivatives (just like in a reduction
     operation) in two different orders.
 </p>
+
 <p>
     So far the discussion might sound like symbolic math, but automatic
     differentiation actually does something different. It never builds a giant
     symbolic derivative of your whole expression. Instead, it computes the
-    <em>numeric value</em> of the derivative right at the point where you need
-    it. The trick is that each part of the chain rule can be evaluated
-    numerically, so there's no need to materialize the entire derivative
-    expression.
+    <em>numerical value</em> of the derivative right at a single point. The
+    trick is that the term that we assume known of the chain rule can be
+    evaluated numerically at each step (where we <em>expanded</em> the chain
+    rule in the example before). In this way, we only materialize the numerical
+    value, accumulating (by mean of <em>multiplication</em>) the terms at each
+    step. It is the order of application of the chain rule discussed so far that
+    directly determines the direction of the accumulation of gradients. In fact,
+    it turns out that the automatic differentiation algorithm is nothing more
+    than the implementation of the evaluation of the chain rule.
 </p>
 
-<h3>Forward Mode</h3>
+<h3>Reverse Mode</h3>
+<p>
+    When we expanded the chain rule from outputs to inputs, we supposed that the
+    partial \(\frac{\partial s}{\partial u}\) was known and expanded the other
+    partial in the next step. To implement this, for each intermediate node
+    \(v_i\) of the expression, we compute <em>simbolically</em>
+    \[
+    \overline{u} = \frac{\partial s}{\partial u}
+    \]
+    where in our case \(u = v_{i = 0\dots3}\) and \(s = v_3\). These quantities
+    are called <em>adjoints</em> or <em>co-tangents</em> in the literature.
+    Since the order of appearance of terms during the expansion is from outputs
+    to inputs, we must follow that same order.
+    \[
+    \begin{align}
+        \overline{v_3} &= 1  \\[.5em]
+        \overline{v_2} &= \overline{v_3} \cdot \frac{\partial{v_3}}{\partial{v_2}} = \overline{v_3} \cdot 2 \\[.5em]
+        \overline{v_1} &= \overline{v_2} \cdot \frac{\partial{v_2}}{\partial{v_1}} = \overline{v_2} \cdot 2v_1\\[.5em]
+        \overline{v_0} &= \overline{v_1} \cdot \frac{\partial{v_1}}{\partial{v_0}} = \overline{v_1} \cdot \cos{v_0}  \\[.5em]
+        \overline{x} &= \overline{v_0} \cdot \frac{\partial{v_0}}{\partial{x}} = \overline{v_0} \cdot 3x^2 \\[.5em]
+    \end{align}
+    \]
+    If you look carefully at the derivations, each adjoint computation depends
+    directly on values/adjoints that comes after on the computational graph.
+    This is why this computations should be performed <em>after</em> the
+    computational graph has been entirely evaluated. In the literature we say
+    that we do a <em>forward</em> pass of the computational graph to get all the
+    intermediate values instantiated. Then, we perform a <em>backward</em> pass,
+    where we accumulate the gradients in <em>reverse</em>. That's why we call
+    this method reverse mode (also called <em>backpropagation</em> in ML lingo).
+</p>
 
+{% call code("python") %}
+def df(x: float) -> float:
+    # Forward evaluation of the function
+    v_0 = x**3
+    v_1 = math.sin(v_0)
+    v_2 = v_1**2
+    v_3 = 2*v_2
+    # Reverse gradient accumulation
+    dv_3 = 1
+    dv_2 = dv_3 * 2
+    dv_1 = dv_2 * 2 * v_1
+    dv_0 = dv_1 * math.cos(v_0)
+    dx = dv_0 * 3 * x**2
+    # Return value, gradient of the function
+    return dx
+{% endcall %}
+
+<p>
+    If executed, this function will return the exact value of the derivative at
+    the specified point. You can also verify that this function returns exactly
+    the derivative as intended by comparing it with the symbolical form \(f(x) =
+    12x^2 \cos{x^3} \sin{x^3}\).
+</p>
+
+<p>
+    As we can see from the code, we have two computational graphs. One for the
+    function and the other for the gradient computation. In reality, we
+    represent them directly on the same graph, indicating the flow of gradients during the.
+</p>
 
 <h3>References</h3>
 <ul>
-    <li><a href="#">Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation</a> - Griewank, Walther</li>
+    <li><a href="https://dl.acm.org/doi/book/10.5555/1455489">Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation</a> - Griewank, Walther</li>
     <li><a href="https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation">Reverse-mode automatic differentiation: a tutorial</a> - Rufflewind</li>
     <li><a href="https://dl.acm.org/doi/abs/10.5555/3122009.3242010">Automatic differentiation in machine learning: a survey</a> - Atilim Gunes Baydin et. al.</li>
 </ul>
