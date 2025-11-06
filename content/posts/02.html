@@ -399,12 +399,37 @@ print(f"df_dx({x.value}) = {x.grad}")
     though that I haven't talked about until now. In our example, all operations
     were sequential in nature, but what happens when, for example, we have
     multiple inputs? Consider for example this slightly more complex function
-    \(f(x, y) = (x^2 + \sin(y)) \cdot x\) and its corresponding computational graph
+    \(f(x, y) = \cos([x^2 + \sin(y)] \cdot x)\) and its corresponding computational graph
 </p>
 
 <p></p>
 <img src="/img/02_computational_graph_03.png" style="padding: 2em;"/>
 <p></p>
+
+<p>
+    When we try to apply the chain rule to this expression in order to
+    differentiate with respect to the input \(x\), we can immediately see that
+    it is possible to reach it from two different paths along the graph. This
+    leads to two different expansions of the chain rule.
+</p>
+
+\[
+    \frac{\partial v_4}{\partial v_3}
+    \frac{\partial v_3}{\partial x}
+    \quad
+    \text{or}
+    \quad
+    \frac{\partial v_4}{\partial v_3}
+    \frac{\partial v_3}{\partial v_2}
+    \frac{\partial v_2}{\partial v_0}
+    \frac{\partial v_0}{\partial x}
+\]
+
+<p>
+    To account for this situations, it is sufficient to <em>sum</em> the
+    gradients corresponding to the different paths. In fact, the chain rule
+    is in reality the following
+</p>
 
 <h3>References</h3>
 <ul>
