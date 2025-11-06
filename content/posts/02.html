@@ -66,9 +66,9 @@ keywords: [Machine Learning, Math, Numerical Programming]
 <p>
     With this compact graphical representation we can show exectly dependencies
     between functions and the flow of values though the computational graph. I
-    will use them extensively in this post because they happen to be also quite
-    useful to visualize the *gradients* flow through the computation graph,
-    which may help to better ground the concepts.
+    will use them in this post because they happen to be also quite useful to
+    visualize the <em>gradients</em> flow through the computation graph, which
+    may help to better ground the concepts.
 </p>
 
 <h3>The Chain Rule</h3>
@@ -84,24 +84,27 @@ keywords: [Machine Learning, Math, Numerical Programming]
     depends directly on another variable \(u\), which in turn depends on \(t\),
     then the way \(s\) changes with respect to \(t\) can be found by multiplying
     how \(s\) changes with \(u\) by how \(u\) changes with \(t\). If we want to
-    avoid the word-twisting definition, and stick to plain terms, it’s like
-    tracing how a small change in \(t\) ripples through \(u\) and finally
-    affects \(s\).
+    avoid the word-twisting definition and stick to plain terms, the formula
+    says that to know how much a variable changes with respect to another, we
+    need to multiply how their intermediate values changes with respect to their
+    inputs. Intuitively, it traces how a small change in \(t\) ripples through
+    \(u\) and finally affects \(s\).
 </p>
 
 <p>
     Sometimes this formula is expressed with \(s = f(x)\) and \(t = x\), but I
     deliberately wrote it in the most general form to make more clear that this
-    rule can be applied repeatedly for each intermediate variable, until there
-    are no more intermediate variables and the "end" of the expression is
-    reached. Following the previous analogy, it can be roughly compared to
-    tracing how a small change in the input ripples through each step of the
-    computation all the way to the final output.
+    rule can be applied repeatedly for each intermediate variable. We can apply
+    it recursively until there are no more intermediate variables left
+    (basically reaching the "end" of the expression). Following the previous
+    analogy, it can be roughly compared to tracing how a small change in the
+    input ripples through each step of the computation all the way to the final
+    output.
 </p>
 
 <p>
-    Looking at the formula, we can note that there are basically three things we
-    can choose when applying the chain rule:
+    Looking at the formula, we can note that there are basically three variables
+    that must be decided when first applying the chain rule:
     <ul>
         <li>The output variable \(s\) to differentiate.</li>
         <li>The input variable \(t\) we differentiate with respect to.</li>
@@ -121,7 +124,10 @@ keywords: [Machine Learning, Math, Numerical Programming]
     \(s = v_3\) and \(t = x\). Now, if we want to start from the output and move
     towards the input, we have to set \(u = v_2\), and then recursively apply
     the chain rule going <em>backwards</em>. This is also the most common way
-    the chain rule is applied.
+    the chain rule is applied. I have put boxes around the terms of the
+    expression where the recursive relation is applied and I also delimited the
+    expansion with parentheses, to make the <em>direction</em> of the expansion
+    more clear.
     \[
     \begin{align}
     \frac{\partial v_3}{\partial x}
@@ -133,13 +139,7 @@ keywords: [Machine Learning, Math, Numerical Programming]
 </p>
 
 <p>
-    I have put boxes around the terms of the expression where the recursive
-    relation is applied and I also delimited the expansion with parentheses, to
-    make the <em>direction</em> of the expansion more clear.
-</p>
-
-<p>
-    Conversely, we can also apply the rule on the other order. To do so, we
+    Conversely, we can also apply the rule on the opposite order. To do so, we
     choose \(u = v_0\) and recursively apply the rule until we reach the output.
     It may seems weird initially, but I suggest to focus exclusively on the
     symbolic application of the formula (using the computational graph as a
@@ -157,8 +157,8 @@ keywords: [Machine Learning, Math, Numerical Programming]
 <p>
     We end up with the same final derivative, but the terms can be expanded in
     two different orders. In the first expansion, the terms accumulate from
-    <em>left to right</em> (starting near the output), and in the other, from
-    <em>right to left</em> (starting near the input). In other words, in the
+    <em>left to right</em> (starting from the output), and in the other, from
+    <em>right to left</em> (starting from the input). In other words, in the
     first case, we assume that the leftmost term is already known and expand the
     rightmost term.
     \[
@@ -195,9 +195,9 @@ keywords: [Machine Learning, Math, Numerical Programming]
 <h3>Reverse Mode</h3>
 <p>
     When we expanded the chain rule from outputs to inputs, we supposed that the
-    partial \(\frac{\partial s}{\partial u}\) was known and expanded the other
-    partial in the next step. To implement this, for each intermediate node
-    \(v_i\) of the expression, we compute <em>simbolically</em>
+    partial \(\frac{\partial s}{\partial u}\) was known and recursively expanded
+    the other partial in the next step. To implement this, for each intermediate
+    node \(v_i\) of the expression, we compute <em>simbolically</em>
     \[
     \overline{u} = \frac{\partial s}{\partial u}
     \]
@@ -243,22 +243,174 @@ def df(x: float) -> float:
 
 <p>
     If executed, this function will return the exact value of the derivative at
-    the specified point. You can also verify that this function returns exactly
-    the derivative as intended by comparing it with the symbolical form \(f(x) =
+    the specified point. You can verify that this function returns exactly the
+    derivative as intended by comparing it with the symbolical form \(f(x) =
     12x^2 \cos{x^3} \sin{x^3}\).
 </p>
 
 <p>
     As we can see from the code, we have two computational graphs. One for the
     function and the other for the gradient computation. In reality, we
-    represent them directly on the same graph, indicating the flow of gradients during the.
+    represent them directly on the same graph, indicating both the flow of
+    values and of gradients at the same time. Note that the operation applied on
+    gradients is not explicitly shown, because gradients are implicitly
+    multiplied at each step.
 </p>
+
+<p></p>
+<img src="/img/02_computational_graph_02.png" style="padding: 2em;"/>
+<p></p>
+
+<p>
+    For now, we just hard coded a specific execution of the reverse mode
+    automatic differentiation algorithm. Obviously, we can make a much more
+    generic implementation based on this idea which doesn't involve writing each
+    time each intermediate step and their corresponding gradient computation
+    explicitly. To do that, we need to implement a basic mechanism to keep track
+    of intemediate values and their dependencies in a computation. A very simple
+    way to do so is to represent both values and operations as small objects
+    that remember how they were computed.
+</p>
+
+{% call code("python") %}
+# Generic operation
+class Value:
+
+  def __init__(self, prev: "Value"):
+    self.prev = prev
+    self.grad = 0
+    self.value = None
+
+# Input variable
+class Input(Value):
+
+  def __init__(self, value: float):
+    super().__init__(None)
+    self.value = value
+
+  def forward(self) -> None:
+    return self.value
+
+  def backward(self, d_out: float) -> None:
+    self.grad = d_out
+
+# Sin operation
+class Sin(Value):
+
+  def forward(self):
+    self.prev.forward()
+    self.value = math.sin(self.prev.value)
+
+  def backward(self, d_out: float):
+    self.grad = d_out * math.cos(self.prev.value)
+    self.prev.backward(self.grad)
+
+# Pow operation
+class Pow(Value):
+
+  def __init__(self, prev: Value, exp: int):
+    super().__init__(prev)
+    self.prev = prev
+    self.exp = exp
+
+  def forward(self):
+    self.prev.forward()
+    self.value = self.prev.value ** self.exp
+
+  def backward(self, d_out: float):
+    self.grad = d_out * self.exp * (self.prev.value ** (self.exp - 1))
+    self.prev.backward(self.grad)
+
+# Mul operation (by const)
+class Mul(Value):
+
+  def __init__(self, prev: Value, const: float):
+    super().__init__(prev)
+    self.prev = prev
+    self.const = const
+
+  def forward(self):
+    self.prev.forward()
+    self.value = self.prev.value * self.const
+
+  def backward(self, d_out: float):
+    self.grad = d_out * self.const
+    self.prev.backward(self.grad)
+{% endcall %}
+
+<p>
+    Each node in the graph stores three things: the numerical value from the
+    forward pass, its gradient (which is initially zero), and a reference to the
+    input node. To evaluate the graph we use the <tt>forward()</tt> method,
+    which computes the value produced by the single node. The highlight here is
+    the <tt>backward()</tt> method, which computes the local derivative and
+    recursively pushes the accumulated gradient to its parent by passing it to
+    the argument of the next <tt>backward()</tt> call.
+    With this simple DSL we can create a <em>static</em> computational graph of
+    our example function, evaluate it, and take its derivative (at a specific
+    point). All of this without explicitly deriving the gradient.
+</p>
+
+{% call code("python") %}
+# we evaluate it on x=10
+x = Input(10)
+y = Mul(Pow(Sin(Pow(x, 3)), 2), 2)
+# evaluate the graph
+y.forward()
+# evaluate the gradient
+y.backward(1)
+# print value and gradient
+print(f"f({x.value}) = {y.value}")
+print(f"df_dx({x.value}) = {x.grad}")
+{% endcall %}
+
+<p>
+    Notice that when we first called <tt>backward()</tt> we passed the value 1,
+    which is the gradient of <tt>y</tt> with respect to itself. At the end of
+    the <tt>backward()</tt> method, each node will contain the gradient of the
+    node with respect to the output variable (in our case <tt>y</tt>). This is
+    why we print <tt>x.grad</tt> value in the snippet above. You can also notice
+    that, just as before, we need to first evaluate the entire graph before
+    executing the backward pass. The cool thing about the static graph
+    implementation is that you can then re-evaluate it as many times as you
+    like.
+</p>
+
+
+{% call code("python") %}
+# evaluate on x=5
+x.value = 5
+y.forward()
+y.backward(1)
+print(f"f({x.value}) = {y.value}")
+print(f"df_dx({x.value}) = {x.grad}")
+
+# evaluate on x=3
+x.value = 3
+y.forward()
+y.backward(1)
+print(f"f({x.value}) = {y.value}")
+print(f"df_dx({x.value}) = {x.grad}")
+{% endcall %}
+
+<p>
+    With this simple implementation we can now define any function composed of
+    \(sin\), exponentials and multiplications by constants. There is a problem
+    though that I haven't talked about until now. In our example, all operations
+    were sequential in nature, but what happens when, for example, we have
+    multiple inputs? Consider for example this slightly more complex function
+    \(f(x, y) = (x^2 + \sin(y)) \cdot x\) and its corresponding computational graph
+</p>
+
+<p></p>
+<img src="/img/02_computational_graph_03.png" style="padding: 2em;"/>
+<p></p>
 
 <h3>References</h3>
 <ul>
-    <li><a href="https://dl.acm.org/doi/book/10.5555/1455489">Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation</a> - Griewank, Walther</li>
-    <li><a href="https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation">Reverse-mode automatic differentiation: a tutorial</a> - Rufflewind</li>
-    <li><a href="https://dl.acm.org/doi/abs/10.5555/3122009.3242010">Automatic differentiation in machine learning: a survey</a> - Atilim Gunes Baydin et. al.</li>
+    <li><a href="https://dl.acm.org/doi/book/10.5555/1455489">Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation</a> - <em>Griewank, Walther</em></li>
+    <li><a href="https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation">Reverse-mode automatic differentiation: a tutorial</a> - <em>Rufflewind</em></li>
+    <li><a href="https://dl.acm.org/doi/abs/10.5555/3122009.3242010">Automatic differentiation in machine learning: a survey</a> - <em>Atilim Gunes Baydin et. al.</em></li>
 </ul>
 
 {% endblock %}
