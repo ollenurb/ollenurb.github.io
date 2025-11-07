@@ -427,15 +427,24 @@ print(f"df_dx({x.value}) = {x.grad}")
 
 <p>
     To account for this situations, it is sufficient to <em>sum</em> the
-    gradients corresponding to the different paths. In fact, the chain rule
-    is in reality the following
+    gradients corresponding to each different path. In fact, the multi-variate
+    chain rule formula is in reality the following one.
 </p>
+
+\[
+    \frac{\partial s}{\partial t} = \sum_i \frac{\partial s}{\partial u_i}\frac{\partial u_i}{\partial t}
+\]
+
+<p>
+</p>
+
 
 <h3>References</h3>
 <ul>
     <li><a href="https://dl.acm.org/doi/book/10.5555/1455489">Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation</a> - <em>Griewank, Walther</em></li>
-    <li><a href="https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation">Reverse-mode automatic differentiation: a tutorial</a> - <em>Rufflewind</em></li>
     <li><a href="https://dl.acm.org/doi/abs/10.5555/3122009.3242010">Automatic differentiation in machine learning: a survey</a> - <em>Atilim Gunes Baydin et. al.</em></li>
+    <li><a href="https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation">Reverse-mode automatic differentiation: a tutorial</a> - <em>Rufflewind</em></li>
+    <li><a href="https://leimao.github.io/article/Automatic-Differentiation/">Automatic Differentiation</a> - <em>Lei Mao</em></li>
 </ul>
 
 {% endblock %}
