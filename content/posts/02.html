@@ -192,7 +192,7 @@ keywords: [Machine Learning, Math, Numerical Programming]
     than the implementation of the evaluation of the chain rule.
 </p>
 
-<h3>Reverse Mode</h3>
+<h3>Reverse Accumulation Mode</h3>
 <p>
     When we expanded the chain rule from outputs to inputs, we supposed that the
     partial \(\frac{\partial s}{\partial u}\) was known and recursively expanded
@@ -273,88 +273,112 @@ def df(x: float) -> float:
 </p>
 
 {% call code("python") %}
-# Generic operation
-class Value:
+import math
+from typing import List, Optional
 
-  def __init__(self, prev: "Value"):
-    self.prev = prev
-    self.grad = 0
+# Generic value type in a computational graph.
+# It's just a wrapper of a numeric value
+class Value:
+  def __init__(self):
     self.value = None
 
-# Input variable
-class Input(Value):
+# Unary operation that tracks its single input
+class UnaryOp(Value):
+  def __init__(self, x: Value):
+    super().__init__()
+    self.x = x
 
+# Binary operation that tracks both of its inputs
+class BinaryOp(Value):
+  def __init__(self, x: Value, y: Value):
+    super().__init__()
+    self.x = x
+    self.y = y
+
+# A generic input variable
+class Input(Value):
   def __init__(self, value: float):
-    super().__init__(None)
+    super().__init__()
+    self.value = value
+    self.grad = 0
+
+  def forward(self) -> None:
+    pass
+
+  def backward(self, df_dv: float) -> None:
+    self.grad = df_dv
+
+# A generic constant
+class Constant(Value):
+  def __init__(self, value: float):
+    super().__init__()
     self.value = value
 
   def forward(self) -> None:
-    return self.value
+    pass
 
-  def backward(self, d_out: float) -> None:
-    self.grad = d_out
+  def backward(self, df_dv: float) -> None:
+    return
 
 # Sin operation
-class Sin(Value):
+class Sin(UnaryOp):
+  def __init__(self, x: Value):
+    super().__init__(x)
 
-  def forward(self):
-    self.prev.forward()
-    self.value = math.sin(self.prev.value)
+  def forward(self) -> None:
+    self.x.forward()
+    self.value = math.sin(self.x.value)
 
-  def backward(self, d_out: float):
-    self.grad = d_out * math.cos(self.prev.value)
-    self.prev.backward(self.grad)
+  def backward(self, df_dv: float) -> None:
+    dv_dx = df_dv * math.cos(self.x.value)
+    self.x.backward(dv_dx)
 
-# Pow operation
-class Pow(Value):
-
-  def __init__(self, prev: Value, exp: int):
-    super().__init__(prev)
-    self.prev = prev
+# Pow (by const) operation
+class Pow(UnaryOp):
+  def __init__(self, x: Value, exp: Constant):
+    super().__init__(x)
     self.exp = exp
 
-  def forward(self):
-    self.prev.forward()
-    self.value = self.prev.value ** self.exp
+  def forward(self) -> None:
+    self.x.forward()
+    self.value = self.x.value ** self.exp.value
 
-  def backward(self, d_out: float):
-    self.grad = d_out * self.exp * (self.prev.value ** (self.exp - 1))
-    self.prev.backward(self.grad)
+  def backward(self, df_dv: float) -> None:
+    dv_dx = df_dv * self.exp.value * (self.x.value ** (self.exp.value - 1))
+    self.x.backward(dv_dx)
 
-# Mul operation (by const)
-class Mul(Value):
+# Mul (by const) operation
+class Mul(UnaryOp):
+  def __init__(self, x: Value, y: Constant):
+    super().__init__(x)
+    self.y = y
 
-  def __init__(self, prev: Value, const: float):
-    super().__init__(prev)
-    self.prev = prev
-    self.const = const
+  def forward(self) -> None:
+    self.x.forward()
+    self.value = self.x.value * self.y.value
 
-  def forward(self):
-    self.prev.forward()
-    self.value = self.prev.value * self.const
-
-  def backward(self, d_out: float):
-    self.grad = d_out * self.const
-    self.prev.backward(self.grad)
+  def backward(self, df_dv: float) -> None:
+    dv_dx = df_dv * self.y.value
+    self.x.backward(dv_dx)
 {% endcall %}
 
 <p>
-    Each node in the graph stores three things: the numerical value from the
-    forward pass, its gradient (which is initially zero), and a reference to the
-    input node. To evaluate the graph we use the <tt>forward()</tt> method,
-    which computes the value produced by the single node. The highlight here is
-    the <tt>backward()</tt> method, which computes the local derivative and
-    recursively pushes the accumulated gradient to its parent by passing it to
-    the argument of the next <tt>backward()</tt> call.
-    With this simple DSL we can create a <em>static</em> computational graph of
-    our example function, evaluate it, and take its derivative (at a specific
-    point). All of this without explicitly deriving the gradient.
+    Each node in the graph that represents an operation stores the numerical
+    value of that operation, and a pointer to its inputs. To evaluate the graph
+    we use the <tt>forward()</tt> method, which computes the value produced by
+    each single node. The highlight here is the <tt>backward()</tt> method,
+    which computes the local derivative (<tt>dv_dx</tt>) and recursively pushes the
+    accumulated gradient to its input by passing it to the argument of the next
+    <tt>backward()</tt> call. With this extremely simple DSL we can create a
+    <em>static</em> computational graph of our example function, evaluate it,
+    and take its derivative (at a specific point). All of this without
+    explicitly deriving the gradient.
 </p>
 
 {% call code("python") %}
 # we evaluate it on x=10
 x = Input(10)
-y = Mul(Pow(Sin(Pow(x, 3)), 2), 2)
+y = Mul(Pow(Sin(Pow(x, Constant(3))), Constant(2)), Constant(2))
 # evaluate the graph
 y.forward()
 # evaluate the gradient
@@ -365,17 +389,32 @@ print(f"df_dx({x.value}) = {x.grad}")
 {% endcall %}
 
 <p>
-    Notice that when we first called <tt>backward()</tt> we passed the value 1,
-    which is the gradient of <tt>y</tt> with respect to itself. At the end of
-    the <tt>backward()</tt> method, each node will contain the gradient of the
-    node with respect to the output variable (in our case <tt>y</tt>). This is
-    why we print <tt>x.grad</tt> value in the snippet above. You can also notice
-    that, just as before, we need to first evaluate the entire graph before
-    executing the backward pass. The cool thing about the static graph
-    implementation is that you can then re-evaluate it as many times as you
-    like.
+    We can verify that our solution is working with a battle-tested autodiff
+    framework like Pytorch. The following snippet will return the same numeric
+    values.
 </p>
 
+{% call code("python") %}
+import torch
+x = torch.Tensor([10])
+x.requires_grad = True
+y = torch.pow(torch.sin(torch.pow(x, 3)), 2) * 2
+y.backward(gradient=torch.ones(1))
+print(f"f({x.item()}) = {y.item()}")
+print(f"df_dx({x.item()}) = {x.grad.item()}")
+{% endcall %}
+
+<p>
+    Notice that when we first called <tt>backward()</tt> we passed the value 1,
+    which is the gradient of <tt>y</tt> with respect to itself. At the end of
+    the <tt>backward()</tt> method, each input node will contain the gradient of
+    the node with respect to the variable from which we called the method (in
+    our case <tt>y</tt>). This is why we print <tt>x.grad</tt> value in the
+    snippet above. You can also notice that, just as before, we need to first
+    evaluate the entire graph before executing the backward pass. The cool thing
+    about the static graph implementation is that you can then re-evaluate it as
+    many times as you like.
+</p>
 
 {% call code("python") %}
 # evaluate on x=5
@@ -407,10 +446,10 @@ print(f"df_dx({x.value}) = {x.grad}")
 <p></p>
 
 <p>
-    When we try to apply the chain rule to this expression in order to
-    differentiate with respect to the input \(x\), we can immediately see that
-    it is possible to reach it from two different paths along the graph. This
-    leads to two different expansions of the chain rule.
+    When we try to apply the chain rule to this expression to differentiate with
+    respect to the input \(x\), we can immediately see that it is possible to
+    reach it from two different paths along the graph. This leads to two
+    different expansions of the chain rule.
 </p>
 
 \[
@@ -428,7 +467,7 @@ print(f"df_dx({x.value}) = {x.grad}")
 <p>
     To account for this situations, it is sufficient to <em>sum</em> the
     gradients corresponding to each different path. In fact, the multi-variate
-    chain rule formula is in reality the following one.
+    chain rule formula is in reality the following.
 </p>
 
 \[
@@ -436,8 +475,148 @@ print(f"df_dx({x.value}) = {x.grad}")
 \]
 
 <p>
+    For each intermediate value \(u_i\). To support this more general case, we
+    need to update our code by changing the gradient computation of the input
+    nodes, accumulating the gradient at each call instead of setting a new value
+    each time. We set up also a <tt>zero_grad()</tt> function, to reset gradients of
+    input values in the computational graph.
+    We can also make our code more flexible by introducing more general versions
+    of some of the operations introduced before. For example <tt>Mul</tt> can be
+    rewritten so that it supports multiplication between any values, not just
+    between a value and a constant.
 </p>
 
+{% call code("python") %}
+import math
+from typing import List, Optional
+
+class Value:
+  def __init__(self):
+    self.value = None
+
+class UnaryOp(Value):
+  def __init__(self, x: Value):
+    super().__init__()
+    self.x = x
+
+  # call zero grad recursively until reaching an Input value
+  def zero_grad(self) -> None:
+    self.x.zero_grad()
+
+class BinaryOp(Value):
+  def __init__(self, x: Value, y: Value):
+    super().__init__()
+    self.x = x
+    self.y = y
+
+  def zero_grad(self) -> None:
+    self.x.zero_grad()
+    self.y.zero_grad()
+
+class Input(Value):
+  def __init__(self, value: float):
+    super().__init__()
+    self.value = value
+    self.grad = 0
+
+  def forward(self) -> None:
+    pass
+
+  def backward(self, df_dv: float) -> None:
+    # now we sum the incoming gradient to the actual gradient
+    self.grad += df_dv
+
+  # reset the gradient
+  def zero_grad(self) -> None:
+    self.grad = 0
+
+class Constant(Value):
+  def __init__(self, value: float):
+    super().__init__()
+    self.value = value
+
+  def forward(self) -> None:
+    pass
+
+  def backward(self, df_dv: float) -> None:
+    pass
+
+  def zero_grad(self) -> None:
+    pass
+
+class Sin(UnaryOp):
+  def __init__(self, x: Value):
+    super().__init__(x)
+
+  def forward(self) -> None:
+    self.x.forward()
+    self.value = math.sin(self.x.value)
+
+  def backward(self, df_dv: float) -> None:
+    dv_dx = df_dv * math.cos(self.x.value)
+    self.x.backward(dv_dx)
+
+# Pow operation (exponential)
+class Pow(UnaryOp):
+  # now accepts any value as an exponential
+  def __init__(self, x: Value, exp: Value):
+    super().__init__(x)
+    self.exp = exp
+
+  def forward(self) -> None:
+    self.x.forward()
+    self.exp.forward()
+    self.value = self.x.value ** self.exp.value
+
+  def backward(self, df_dv: float) -> None:
+    dv_dx = df_dv * self.exp.value * (self.x.value ** (self.exp.value - 1))
+    dv_dexp = df_dv * (self.x.value ** self.exp.value) * math.log(self.x.value)
+    self.x.backward(dv_dx)
+    self.exp.backward(dv_dexp)
+
+# Mul operation (between any values)
+class Mul(BinaryOp):
+  # now accepts any value as the second argument
+  def __init__(self, x: Value, y: Value):
+    super().__init__(x, y)
+
+  def forward(self) -> None:
+    self.x.forward()
+    self.y.forward()
+    self.value = self.x.value * self.y.value
+
+  def backward(self, df_dv: float) -> None:
+    dv_dx = df_dv * self.y.value
+    dv_dy = df_dv * self.x.value
+    self.x.backward(dv_dx)
+    self.y.backward(dv_dy)
+{% endcall %}
+
+<p>
+    Since only the input nodes will be tracing gradients, the <tt>zero_grad</tt>
+    function just recursively call the same function of its children until it
+    reaches an input node, which effectively sets its gradient to 0. We need
+    this method because inputs acts like <em>"sink"</em> nodes that accumulate
+    gradients during the backward pass. If we call the <tt>backward()</tt> method and
+    then want to re-evaluate the gradient on another point, if we don't reset
+    the gradient it would be added to the previous one, leading to an incorrect
+    solution. Also, the possibility to reset gradients at will is particularly
+    useful when we need to accumulate the gradient of multiple points to take
+    its mean (which happens quite often in deep learning).
+</p>
+
+<h3>Conclusion</h3>
+<p>
+    We saw the core idea behind reverse mode automatic differentiation. Starting
+    from first principles, we saw how this algorithm came up quite naturally
+    just by reasoning about how we expand the chain rule. We also saw a simple
+    implementation from scratch in Python to demonstrate the simplicity of this
+    algorithm. The discussion has been quite superficial to keep it light and
+    easy to follow along. For example, I consciously avoided to discuss the
+    forward mode, which I find much more simpler to understand. If you want to
+    know more, I encourage you to dig deeper by looking at the awesome
+    references at the end of this article.
+</p>
 
 <h3>References</h3>
 <ul>
